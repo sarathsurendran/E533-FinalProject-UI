@@ -2,19 +2,19 @@ import React, { useState, useEffect } from 'react';
 import { Box, Typography, Select, MenuItem, FormControl, InputLabel, CircularProgress, Grid } from '@mui/material';
 import { Line } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend } from 'chart.js';
-
+import config from '../config';
 ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend);
 
 function PerformanceMetrics() {
-  const [selectedModel, setSelectedModel] = useState('Alexnet');
+  const [selectedModel, setSelectedModel] = useState('vgg16');
   const [modelData, setModelData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
-
+  const url=`${config.apiUrl}/model-history`;
   useEffect(() => {
     const fetchData = async () => {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:5000/model-history?modelname=${selectedModel}`);
+        const response = await fetch(url+`?modelname=${selectedModel}`);
         const data = await response.json();
         setModelData(data);
       } catch (error) {
@@ -30,6 +30,37 @@ function PerformanceMetrics() {
   const handleModelChange = (event) => {
     setSelectedModel(event.target.value);
   };
+
+  const chartOptions = {
+    responsive: true,
+    scales: {
+      x: {
+        ticks: {
+          color: '#fff', // Light color for text
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)', // Lighter grid lines
+        },
+      },
+      y: {
+        ticks: {
+          color: '#fff', // Light color for text
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)', // Lighter grid lines
+        },
+      },
+    },
+    plugins: {
+        legend: {
+        labels:{
+          color:"#fff"
+        },
+        position: 'bottom',
+        color: '#fff'
+        }
+    }
+    };
 
   const chartData = {
     labels: modelData ? Array.from({ length: modelData.accuracy.length }, (_, i) => i + 1) : [],
@@ -64,18 +95,20 @@ function PerformanceMetrics() {
         label="Model"
         onChange={handleModelChange}
         >
-        <MenuItem value="Alexnet">Alexnet</MenuItem>
-        <MenuItem value="VGGNet16">VGGNet16</MenuItem>
-        <MenuItem value="Hybrid">Hybrid</MenuItem>
+        <MenuItem value="vgg16">VGGNet16</MenuItem>
+        <MenuItem value="vgg19">VGGNet19</MenuItem>
+        <MenuItem value="resnet18">ResNet18</MenuItem>
+        <MenuItem value="hybrid1">Hybrid - Shallow</MenuItem>
+        <MenuItem value="hybrid2">Hybrid - Deep</MenuItem>
         </Select>
         </FormControl>
 
       {isLoading ? (
-        <CircularProgress />
+        <CircularProgress marginTop={10}/>
       ) : (
-        <Grid container spacing={2} justifyContent="center" sx={{ marginTop: 3 }}>
+        <Grid container spacing={2} marginLeft={20} maxWidth="70em" sx={{ marginTop: 3 }}>
           <Grid item xs={12}>
-            <Line data={chartData} />
+            <Line data={chartData} options={chartOptions}/>
           </Grid>
         </Grid>
       )}

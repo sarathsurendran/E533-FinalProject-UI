@@ -2,11 +2,12 @@ import React, { useState } from 'react';
 import { Box, Button, Typography, FormControl, InputLabel, Select, MenuItem, CircularProgress, Grid, TextField } from '@mui/material';
 import { Bar } from 'react-chartjs-2';
 import { Chart as ChartJS, CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend } from 'chart.js';
+import config from '../config';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, Title, Tooltip, Legend);
 
 function EmotionDetection() {
-  const [selectedModel, setSelectedModel] = useState('Alexnet');
+  const [selectedModel, setSelectedModel] = useState('vgg16');
   const [file, setFile] = useState(null);
   const [predictions, setPredictions] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -14,18 +15,41 @@ function EmotionDetection() {
   const handleModelChange = (event) => {
     setSelectedModel(event.target.value);
   };
-
+  const url=`${config.apiUrl}`;
   const handleFileChange = (event) => {
     setFile(event.target.files[0]);
   };
-  const options = {
-    plugins: {
-      legend: {
-        display: false, // This will hide the legend completely
+  
+
+  const chartOptions = {
+    responsive: true,
+    scales: {
+      x: {
+        ticks: {
+          color: '#fff', // Light color for text
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)', // Lighter grid lines
+        },
+      },
+      y: {
+        ticks: {
+          color: '#fff', // Light color for text
+        },
+        grid: {
+          color: 'rgba(255, 255, 255, 0.1)', // Lighter grid lines
+        },
       },
     },
-    // ... other options if any
-  };
+    plugins: {
+        legend: {
+          display:false
+        },
+        position: 'bottom',
+        color: '#fff'
+        }
+    };
+
 
   const handlePredict = async () => {
     if (!file) return;
@@ -36,7 +60,7 @@ function EmotionDetection() {
 
     setIsLoading(true);
     try {
-      const response = await fetch(`http://localhost:5000/predict`, {
+      const response = await fetch(url+`/predict`, {
         method: 'POST',
         body: formData,
       });
@@ -72,9 +96,12 @@ function EmotionDetection() {
               label="Model"
               onChange={handleModelChange}
             >
-              <MenuItem value="Alexnet">Alexnet</MenuItem>
-              <MenuItem value="VGGNet16">VGGNet16</MenuItem>
-              <MenuItem value="Hybrid">Hybrid</MenuItem>
+             
+              <MenuItem value="vgg16">VGGNet16</MenuItem>
+              <MenuItem value="vgg19">VGGNet19</MenuItem>
+              <MenuItem value="resnet18">ResNet18</MenuItem>
+              <MenuItem value="hybrid1">Hybrid - Shallow</MenuItem>
+              <MenuItem value="hybrid2">Hybrid - Deep</MenuItem>
             </Select>
           </FormControl>
         </Grid>
@@ -93,7 +120,7 @@ function EmotionDetection() {
             component="label"
             fullWidth
           >
-            Upload File
+            Upload
             <input
               type="file"
               hidden
@@ -102,16 +129,16 @@ function EmotionDetection() {
           </Button>
         </Grid>
       </Grid>
-      <Box display="flex" justifyContent="left" marginTop={2} marginLeft={14}>
-        <Button variant="contained" onClick={handlePredict} sx={{ width: 100 }}>Predict</Button>
+      <Box display="flex" justifyContent="left" marginLeft={22} marginTop={2} >
+        <Button variant="contained" onClick={handlePredict} marginTop={4} sx={{ width: 100 }}>Predict</Button>
       </Box>
       {isLoading ? (
-        <CircularProgress />
+        <CircularProgress marginTop={3} />
       ) : (
         predictions && (
           <Grid container spacing={2} marginTop={6} justifyContent="center">
             <Grid item xs={8}>
-              <Bar data={chartData} options={options} />
+              <Bar data={chartData} options={chartOptions} />
             </Grid>
           </Grid>
         )
